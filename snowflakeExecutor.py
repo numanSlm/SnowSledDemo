@@ -3,11 +3,20 @@
 """
 
 from snowflake.connector.secret_detector import SecretDetector
-from configFunctionsPython import *
+from configFunctionsPython import (
+    getExecuteConfig,
+    makeSSOConnection,
+    makeSnowflakeConnection,
+    substitueVariable
+)
 import sys
-import os.path
-from os import path
+import os
 import time
+import logging
+import datetime
+import csv
+import sqlparse
+import snowflake.connector.errors
 
 # Get execution configurations parameters
 (
@@ -23,7 +32,6 @@ import time
     splitting_parameter,
 ) = getExecuteConfig()
 inputFileList = ""
-
 
 fFlagUnset = False
 for i in range(0, len(sys.argv)):
@@ -49,10 +57,6 @@ if len(inputFileList) > 0:
         "-----------------------------------------------------------------------------"
     )
     print("Reading files from", inputFileList)
-
-
-# Get execution configurations parameters
-# sso_login, continue_on_failure, variable_substitution, show_errors_on_console, append_master_csv_log = checkConfigCondition = getExecuteConfig()
 
 # Check connection type
 if sso_login.strip().upper() == "TRUE":
@@ -107,9 +111,8 @@ try:
         readFile = fd2.read()
         if len(readFile.strip()) > 0:
             dontAddHeader = True
-except:
+except FileNotFoundError:
     dontAddHeader = False
-
 
 # Write into Output file
 with open("./output/" + OutputLog, mode=mode, encoding="utf-8", newline="") as fd:
@@ -127,7 +130,7 @@ with open("./output/" + OutputLog, mode=mode, encoding="utf-8", newline="") as f
             ]
         )
 
-    # Iteragte through each file
+    # Iterate through each file
     for fileName in executionFileNames:
         skipFile = False
         errorsInFile = 0
@@ -141,7 +144,7 @@ with open("./output/" + OutputLog, mode=mode, encoding="utf-8", newline="") as f
             else:
                 input_path = fileName
 
-            if path.exists(input_path):
+            if os.path.exists(input_path):
                 with open(input_path, mode="r", encoding="utf-8") as readfile:
                     # Read Data inside file
                     fileContent = readfile.read()
@@ -234,16 +237,14 @@ with open("./output/" + OutputLog, mode=mode, encoding="utf-8", newline="") as f
 
                     # Check condition to break execution based on config property
                     if (
-                        continue_on_failure.strip().upper() == "FALSE"
-                        and error_flag == True
+                        continue_on_failure.strip().upper() == "FALSE" and error_flag == True
                     ):
 
                         # Unusual termination of code
                         codeTerminated = True
                         break
                 if (
-                    continue_on_failure.strip().upper() == "FALSE"
-                    and error_flag == True
+                    continue_on_failure.strip().upper() == "FALSE" and error_flag == True
                 ):
                     # Unusual termination of code
                     codeTerminated = True
