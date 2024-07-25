@@ -17,4 +17,3 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           ignore: "F501,E712"
-          exclude: "*.py"
