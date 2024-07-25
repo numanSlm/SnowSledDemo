@@ -17,7 +17,3 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           ignore: "F501,E712"
-          exclude: "src/ignoreme.py"
-          max-line-length: "100"
-          path: "src"
-          plugins: "flake8-bugbear==22.1.11 flake8-black"
